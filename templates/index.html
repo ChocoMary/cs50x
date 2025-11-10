@@ -9,11 +9,6 @@ Home page
     <h1 class="mb-4">Welcome to Your Budget Tracker 💸</h1>
     <p class="lead">Track your income, expenses, and savings easily!</p>
 
-    {% if not session["user_id"] %}
-        <a href="/register" class="btn btn-primary me-2">Register</a>
-        <a href="/login" class="btn brn-secondary">Login</a>
-    {% else %}
-        <a href="/add" class="btn btn-success">Add Transaction</a>
-    {% endif %}
+    
 </div>
 {% endblock %}
