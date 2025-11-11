@@ -136,5 +136,41 @@ def add():
     # GET method
     return render_template("add.html")
 
+@app.route("/history")
+@login_required
+def history():
+    type_ = request.args.get("type")
+    category = request.args.get("category")
+    start_date = request.args.get("start_date")
+    end_date = request.args.get("end_date")
+
+    query = "SELECT date, type, category, amount, note FROM transactions WHERE user_id = ?"
+
+    params = [session["user_id"]]
+
+    if type_:
+        query += " AND type = ?"
+        params.append(type_)
+
+    if category:
+        query += " AND category LIKE ?"
+        params.append(f"%{category}%")
+
+    if start_date:
+        query += " AND date(date) >= ?"
+        params.append(start_date)
+
+    if end_date:
+        query += " AND date(date) <= ?"
+        params.append(end_date)
+
+    query += " ORDER BY date DESC"
+
+    transactions = db.execute(query, *params)
+
+    return render_template("history.html", transactions = transactions)
+
+
+
 if __name__ == "__main__":
     app.run(debug=True)
