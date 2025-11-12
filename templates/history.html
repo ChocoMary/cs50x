@@ -11,7 +11,8 @@ History
     <!-- Filter form -->
      <form method="get" action="/history" class="row g-3 mb-4">
         <div class="col-md-3">
-            <select name="type" class="form-select">
+            <label for="type" class="form-label">Type</label>
+            <select name="type" id="type" class="form-select">
                 <option value="">All Types</option>
                 <option value="Income" {% if request.args.get('type') == 'Income' %}selected{% endif %}>Income</option>
                 <option value="Expense" {% if request.args.get('type') == 'Expense' %}selected{% endif %}>Expense</option>
@@ -19,15 +20,25 @@ History
         </div>
 
         <div class="col-md-3">
-            <input type="text" name="category" class="form-control" placeholder="Category", value="{{ request.args.get('category', '')}}">
+            <label for="category" class="form-label">Category</label>
+            <select name="category" id="category" class="form-select">
+                <option value="">All</option>
+                {% for category in categories %}
+                    <option value="{{ category.name }}" {% if request.args.get('category') == category.name %}selected{% endif %}>
+                        {{ category.name }}
+                    </option>
+                {% endfor %}
+            </select>
         </div>
 
         <div class="col-md-3">
-            <input type="date" name="start_date" class="form-control" value="{{ request.args.get('start_date', '') }}">
+            <label for="start_date" class="form-label">From</label>
+            <input type="date" name="start_date" id="start_date" class="form-control" value="{{ request.args.get('start_date', '') }}">
         </div>
 
         <div class="col-md-3">
-            <input type="date" name="end_date" class="form-control" value="{{ request.args.get('end_date', '') }}">
+            <label for="end_date" class="form-label">To</label>
+            <input type="date" name="end_date" id="end_date" class="form-control" value="{{ request.args.get('end_date', '') }}">
         </div>
 
         <div class="col-md-12 text-end">

@@ -20,7 +20,16 @@ Add Transaction
 
         <div class="mb-3">
             <label for="category" class="form-label">Category</label>
-            <input type="text" id="category" name="category" class="form-control" placeholder="e.g. Food, Salary, Rent" required>
+            <select class="form-select" name="category" id="category">
+                {% for category in categories %}
+                    <option value="{{ category.id }}">{{ category.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="mb-3">
+            <label for="new_category" class="form-label">Add New Category</label>
+            <input class="form-control" name="new_category" id="new_category" placeholder="Enter new category" type="text">
         </div>
 
         <div class="mb-3">
