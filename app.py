@@ -114,61 +114,106 @@ def add():
     """ Add a new transaction """
     if request.method == "POST":
         type_ = request.form.get("type")
-        category = request.form.get("category")
+        category_id = request.form.get("category")
         amount = request.form.get("amount")
         note = request.form.get("note")
 
+        # Optional: new category
+        new_category = request.form.get("new_category").title()
+
+        # Validate amount
         try:
             amount = float(amount)
             if type_ == "Expense":
-                amount = 0 - amount
+                amount = -amount
         except ValueError:
             return apology("Invalid Amount")
+        
+        # Category Check
+        if category_id and new_category:
+            flash("Please choose only one category.")
+            return redirect("/add")
+
+        if not category_id and not new_category:
+            flash("Please choose or create a category.")
+            return redirect("/add")
+
+        if new_category:
+
+            # Check if it already exists
+            existing = db.execute(
+                "SELECT id FROM categories WHERE name = ? AND (user_id = ? OR user_id IS NULL)", new_category, session["user_id"]
+            )
+            if existing:
+                category_id = existing[0]["id"]
+            else:
+                db.execute(
+                    "INSERT INTO categories (user_id, name) VALUES(?, ?)", session["user_id"], new_category
+                )
+
+                category_id = db.execute(
+                    "SELECT id FROM categories WHERE user_id = ? AND name = ?", session["user_id"], new_category
+                )[0]["id"]
 
         # insert into database
         db.execute(
-            "INSERT INTO transactions (user_id, date, type, category, amount, note) VALUES (?, datetime('now'), ?, ?, ?, ?)",
-            session["user_id"], type_, category, amount, note,
+            "INSERT INTO transactions (user_id, date, type, category_id, amount, note) VALUES (?, datetime('now'), ?, ?, ?, ?)",
+            session["user_id"], type_, category_id, amount, note,
         )
 
-        return redirect("/")
+        flash("Transaction added successfully!")
+
+        return redirect("/add")
     
     # GET method
-    return render_template("add.html")
+    categories = db.execute(
+        "SELECT * FROM categories WHERE user_id IS NULL OR user_id = ? ORDER BY name", session["user_id"]
+    )
+    return render_template("add.html", categories = categories)
 
 @app.route("/history")
 @login_required
 def history():
+    categories = db.execute(
+        "SELECT id, name FROM categories WHERE user_id IS NULL OR user_id = ?", session["user_id"]
+    )
+
     type_ = request.args.get("type")
-    category = request.args.get("category")
+    category_id = request.args.get("category")
     start_date = request.args.get("start_date")
     end_date = request.args.get("end_date")
 
-    query = "SELECT date, type, category, amount, note FROM transactions WHERE user_id = ?"
-
+    # query = "SELECT date, type, category, amount, note FROM transactions WHERE user_id = ?"
+    query = """
+            SELECT t.id, t.date, t.type, t.amount, t.note , c.name AS category_name
+            FROM transactions t
+            LEFT JOIN categories c ON t.category_id = c.id
+            WHERE t.user_id = ?
+"""
     params = [session["user_id"]]
 
     if type_:
-        query += " AND type = ?"
+        query += " AND t.type = ?"
         params.append(type_)
 
-    if category:
-        query += " AND category LIKE ?"
-        params.append(f"%{category}%")
+    if category_id:
+        query += " AND t.category_id = ?"
+        params.append(f"%{category_id}%")
 
     if start_date:
-        query += " AND date(date) >= ?"
+        query += " AND date(t.date) >= ?"
         params.append(start_date)
 
     if end_date:
-        query += " AND date(date) <= ?"
+        query += " AND date(t.date) <= ?"
         params.append(end_date)
 
-    query += " ORDER BY date DESC"
+    query += " ORDER BY t.date DESC"
 
     transactions = db.execute(query, *params)
 
-    return render_template("history.html", transactions = transactions)
+
+    return render_template("history.html", transactions = transactions, categories = categories)
 
 
 

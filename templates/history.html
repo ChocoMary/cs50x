@@ -24,7 +24,7 @@ History
             <select name="category" id="category" class="form-select">
                 <option value="">All</option>
                 {% for category in categories %}
-                    <option value="{{ category.name }}" {% if request.args.get('category') == category.name %}selected{% endif %}>
+                    <option value="{{ category.id }}" {% if request.args.get('category') == category.name %}selected{% endif %}>
                         {{ category.name }}
                     </option>
                 {% endfor %}
@@ -70,9 +70,9 @@ History
                                     <span class="text-danger">Expense</span>
                                 {% endif %}
                             </td>
-                            <td>{{ row.category }}</td>
+                            <td>{{ row.category_name or '-' }}</td>
                             <td>{{ row.note or "-" }}</td>
-                            <td class="text-end">{{ row.amount }}</td>
+                            <td class="text-end">{{ "%.2f"|format(row.amount) }}</td>
                         </tr>
                     {% endfor %}
                 </tbody>

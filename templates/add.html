@@ -12,7 +12,7 @@ Add Transaction
         <div class="mb-3">
             <label for="type" class="form-label">Type</label>
             <select id="type" name="type" class="form-select" required>
-                <option value="">Select</option>
+                <option value="" disabled selected>Select</option>
                 <option value="Income">Income</option>
                 <option value="Expense">Expense</option>
             </select>
@@ -21,6 +21,7 @@ Add Transaction
         <div class="mb-3">
             <label for="category" class="form-label">Category</label>
             <select class="form-select" name="category" id="category">
+                <option value="" selected disabled>Select Category</option>
                 {% for category in categories %}
                     <option value="{{ category.id }}">{{ category.name }}</option>
                 {% endfor %}
@@ -28,18 +29,18 @@ Add Transaction
         </div>
 
         <div class="mb-3">
-            <label for="new_category" class="form-label">Add New Category</label>
-            <input class="form-control" name="new_category" id="new_category" placeholder="Enter new category" type="text">
+            <label for="new_category" class="form-label">Create New Category</label>
+            <input autocomplete="off" class="form-control" name="new_category" id="new_category" placeholder="Enter new category" type="text">
         </div>
 
         <div class="mb-3">
             <label for="amount" class="form-label">Amount</label>
-            <input type="number" id="amount" name="amount" class="form-control" placeholder="$ 0.00" step="0.01" min="0" required>
+            <input autocomplete="off" type="number" id="amount" name="amount" class="form-control" placeholder="$ 0.00" step="0.01" min="0" required>
         </div>
 
         <div class="mb-3">
             <label for="note" class="form-label">Note</label>
-            <textarea id="note" name="note" class="form-control" placeholder="Optional note..." rows="2"></textarea>
+            <textarea autocomplete="off" id="note" name="note" class="form-control" placeholder="Optional note..." rows="2"></textarea>
         </div>
 
         <button type="submit" class="btn btn-primary w-100">Add Transaction</button>
