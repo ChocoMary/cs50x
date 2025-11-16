@@ -13,6 +13,14 @@ Session(app)
 # Connect to database
 db = SQL("sqlite:///budget.db")
 
+@app.after_request
+def after_request(response):
+    """Ensure responses aren't cached"""
+    response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+    response.headers["Expires"] = 0
+    response.headers["Pragma"] = "no-cache"
+    return response
+
 def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
@@ -124,6 +132,8 @@ def add():
         # Validate amount
         try:
             amount = float(amount)
+            if amount < 0:
+                return apology("Invalid Amount!")
             if type_ == "Expense":
                 amount = -amount
         except ValueError:
@@ -215,6 +225,18 @@ def history():
 
     return render_template("history.html", transactions = transactions, categories = categories)
 
+app.route("/saving", methods=["GET", "POST"])
+@login_required
+def saving():
+
+    if request.method == "GET":
+
+        # GET all saving goals belonging to user
+        goals = db.execute(
+            "SELECT * FROM saving_goals WHERE user_id = ?", session["user_id"]
+        )
+
+        return render_template("saving.html", goals = goals)
 
 
 if __name__ == "__main__":
