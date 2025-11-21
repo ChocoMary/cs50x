@@ -108,6 +108,12 @@ def register():
                 "INSERT INTO users (username, hash) VALUES (?, ?)", username, hash
             )
             flash("You're successfully registered!")
+            
+            # creating balance for new user
+            user_id = db.execute(
+                "SELECT id FROM users WHERE username = ?", username
+            )
+            db.execute("INSERT INTO balances (user_id, balance) VALUES (?, 0)", user_id)
             return redirect("/login")
         except ValueError:
             return apology("Username already exist")
@@ -171,6 +177,11 @@ def add():
             session["user_id"], type_, category_id, amount, note,
         )
 
+        # Update Balance
+        db.execute(
+            "UPDATE balances SET balance = balance + ? WHERE user_id = ?", amount, session["user_id"]
+        )
+
         flash("Transaction added successfully!")
 
         return redirect("/add")
@@ -225,18 +236,90 @@ def history():
 
     return render_template("history.html", transactions = transactions, categories = categories)
 
-app.route("/saving", methods=["GET", "POST"])
+@app.route("/saving", methods=["GET", "POST"])
 @login_required
 def saving():
 
-    if request.method == "GET":
+    if request.method == "POST":
+        goal_id = request.form.get("goal_id")
+        new_goal = request.form.get("new_goal")
+        target_amount = request.form.get("target_amount")
+        amount = request.form.get("amount")
+
+        
+        if goal_id and new_goal:
+            return apology("Choose only one goal option.")
+        
+        if not goal_id and not new_goal:
+            return apology("Please choose one goal option.")
+        
+        try:
+            amount = float(amount)
+            if amount < 0:
+                return apology("Invalid amount!")
+        except ValueError:
+            return apology("Please enter numeric amount.")
+        
+        if new_goal:
+            if not target_amount:
+                return apology("Please set a target amount.")
+            
+            try:
+                target_amount = float(target_amount)
+            except ValueError:
+                return apology("Invalid target amount.")
+            
+            db.execute(
+                "INSERT INTO saving_goals (user_id, name, target, saved) VALUES (?, ?, ?, ?)", session["user_id"], new_goal, target_amount, 0
+            )
+
+            goal_id = db.execute(
+                "SELECT id FROM saving_goals WHERE user_id = ? AND name = ?", session["user_id"], new_goal
+            )[0]["id"]
+
+        # Check current balance
+        balance_row = db.execute(
+            "SELECT balance FROM balances WHERE user_id = ?", session["user_id"]
+        )
+
+        current_balance = balance_row[0]["balance"]
+
+        if amount > current_balance:
+            return apology("Not enough balance for saving.")
+        
+        # Update balance
+        db.execute(
+            "UPDATE balances SET balance = balance - ? WHERE user_id = ?", amount, session["user_id"]
+        )
+
+        # Update the saved amount
+        db.execute(
+            "UPDATE saving_goals SET saved = saved + ? WHERE id = ? AND user_id = ?", amount, goal_id, session["user_id"]
+        )
+
+        # Insert Transaction Records
+        db.execute(
+            "INSERT INTO saving_deposits (user_id, goal_id, amount) VALUES (?, ?, ?)", session["user_id"], goal_id, amount
+        )
+
+        flash("Deposit added successfully!")
+        return redirect("/saving")
+
+    else:
 
         # GET all saving goals belonging to user
         goals = db.execute(
             "SELECT * FROM saving_goals WHERE user_id = ?", session["user_id"]
         )
 
-        return render_template("saving.html", goals = goals)
+        # GET current balance
+        balance_row = db.execute(
+            "SELECT balance FROM balances WHERE user_id = ?", session["user_id"]
+        )
+
+        current_balance = balance_row[0]["balance"]
+
+        return render_template("saving.html", goals = goals, balance = current_balance)
 
 
 if __name__ == "__main__":
