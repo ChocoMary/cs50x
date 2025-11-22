@@ -58,7 +58,82 @@ def apology(message, code=400):
 @login_required
 def index():
     """ Show dashboard (homepage)"""
-    return apology("TODO")
+    user_id = session["user_id"]
+
+    # Balance
+    balance = db.execute(
+        "SELECT balance FROM balances WHERE user_id = ?", user_id
+    )[0]["balance"]
+
+    # Income
+    income = db.execute(
+        """ SELECT SUM(amount) AS total_income 
+        FROM transactions
+        WHERE user_id = ?
+        AND type = 'Income'
+        AND strftime('%Y-%m', date) = strftime('%Y-%m', 'now')""", user_id
+    )[0]["total_income"]
+
+    if income is None:
+        income = 0
+
+    # Expenses
+    expense = db.execute(
+        """
+        SELECT SUM(amount) AS total_expense
+        FROM transactions
+        WHERE user_id = ?
+        AND type = 'Expense'
+        AND strftime('%Y-%m', date) = strftime('%Y-%m', 'now')
+        """, user_id
+    )[0]["total_expense"]
+
+    if expense is None:
+        expense = 0
+
+    # Total saved amount
+    saved = db.execute(
+        """SELECT SUM(saved) as total_saved
+        FROM saving_goals
+        WHERE user_id = ?
+        """, user_id
+    )[0]["total_saved"]
+
+    if saved is None:
+        saved = 0
+
+    # Category and amount pair    
+
+    category_rows = db.execute(
+        """SELECT c.name AS category, SUM(t.amount) AS total
+        FROM transactions t JOIN categories c
+        ON t.category_id = c.id
+        WHERE t.user_id = ? AND t.type = 'Expense'
+        GROUP BY c.name""", user_id
+    )
+
+    categories = []
+
+    for row in category_rows:
+        categories.append({
+            "category": row["category"],
+            "amount": row["total"]
+        })
+
+    # Goals
+    goals = db.execute(
+        "SELECT id, name, target, saved FROM saving_goals WHERE user_id = ?", user_id
+    )
+
+    # Goal Percentage
+    for goal in goals:
+        if goal["target"] > 0:
+            goal["percentage"] = (goal["saved"] / goal["target"]) * 100
+
+        else:
+            goal["percentage"] = 0
+
+    return render_template("index.html", balance=balance, income=income, expense=expense, saved=saved, goals=goals, categories=categories)
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
