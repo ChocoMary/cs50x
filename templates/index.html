@@ -5,10 +5,166 @@ Home page
 {% endblock %}
 
 {% block main %}
-<div class="text-center">
-    <h1 class="mb-4">Welcome to Your Budget Tracker 💸</h1>
-    <p class="lead">Track your income, expenses, and savings easily!</p>
+<script>
+    console.log("JS is working");
+</script>
+<div class="container mt-4">
+    <div class="text-center">
+        <h1 class="mb-4">Welcome to Your Budget Tracker 💸</h1>
+        <p class="lead">Track your income, expenses, and savings easily!</p>
+    </div>
 
-    
+    <div class="row">
+
+        <!-- Balance -->
+         <div class="col-12 col-sm-6 col-lg-3 mb-3">
+            <div class="card card-pastel-blue shodow-sm h-100">
+                <div class="card-body d-flex align-items-center">
+                    <i class="bi bi-wallet2 fs-1 text-secondary me-3"></i>
+                    <div>
+                        <h6 class="text-secondary mb-1">Balance</h6>
+                        <h3 class="fw-bold">$ {{ "%.2f"|format(balance) }}</h3>
+                    </div>
+                </div>
+            </div>
+         </div>
+
+         <!-- Income -->
+         <div class="col-12 col-sm-6 col-lg-3 mb-3">
+            <div class="card card-pastel-green shodow-sm h-100">
+                <div class="card-body d-flex align-items-center">
+                    <i class="bi bi-graph-up-arrow fs-1 text-secondary me-3"></i>
+                    <div>
+                        <h6 class="text-secondary mb-1">Income This Month</h6>
+                        <h3 class="fw-bold">$ {{ "%.2f"|format(income) }}</h3>
+                    </div>
+                </div>
+            </div>
+         </div>
+
+         <!-- Expense -->
+         <div class="col-12 col-sm-6 col-lg-3 mb-3">
+            <div class="card card-pastel-red shodow-sm h-100">
+                <div class="card-body d-flex align-items-center">
+                    <i class="bi bi-graph-down-arrow fs-1 text-secondary me-3"></i>
+                    <div>
+                        <h6 class="text-secondary mb-1">Expense This Month</h6>
+                        <h3 class="fw-bold">$ {{ "%.2f"|format(expense) }}</h3>
+                    </div>
+                </div>
+            </div>
+         </div>
+
+         <!-- Saving -->
+         <div class="col-12 col-sm-6 col-lg-3 mb-3">
+            <div class="card card-pastel-yellow shodow-sm h-100">
+                <div class="card-body d-flex align-items-center">
+                    <i class="bi bi-piggy-bank fs-1 text-secondary me-3"></i>
+                    <div>
+                        <h6 class="text-secondary mb-1">Saving</h6>
+                        <h3 class="fw-bold">$ {{ "%.2f"|format(saved) }}</h3>
+                    </div>
+                </div>
+            </div>
+         </div>
+
+    </div>
+
+    <div class="card shadow-sm p-4 mt-4">
+        <h4 class="mb-3 fw-bold">Expenses Breakdown by Category</h4>
+
+        <canvas id="expensePieChart"></canvas>
+    </div>
+
 </div>
+
+<!-- Saving Goals Section -->
+<div class="container mt-5">
+    <h3 class="fw-bold mb-4">Your Saving Goals</h3>
+
+    <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4">
+
+        {% for goal in goals %}
+        <div class="col">
+            <div class="card shadow-sm p-3 h-100" style="background-color: #eff6ff;">
+                <h5 class="fw-bold">{{ goal.name }}</h5>
+
+                <p class="mb-1 text-muted">
+                    Saved: ${{ "%.2f"|format(goal.saved) }} /
+                    ${{ "%.2f"|format(goal.target) }}
+                </p>
+
+                <!-- Progress Bar -->
+                <div class="progress" style="height: 10px;">
+                    <div
+                        class="progress-bar bg-info"
+                        role="progressbar"
+                        style="width: {{ '%.2f'|format(goal.percentage) }}%;">
+                    </div>
+                </div>
+
+                <p class="mt-2 small fw-bold">
+                    {{ "%.1f"|format(goal.percentage) }}%
+                </p>
+            </div>
+        </div>
+        {% endfor %}
+
+    </div>
+</div>
+
+
+<script>
+    // Load categories from Flask
+    const categories = {{ categories|tojson|safe }};
+
+    console.log("Categories:", categories);
+
+    // Extract labels & data
+    const pieLabels = categories.map(e => e.category);
+    const pieData = categories.map(e => parseFloat(e.amount));
+
+    const ctx = document.getElementById('expensePieChart').getContext('2d');
+
+    new Chart(ctx, {
+        type: 'pie',
+        data: {
+            labels: pieLabels,
+            datasets: [{
+                data: pieData,
+                backgroundColor: [
+                    "rgba(255, 99, 132, 0.6)",
+                    "rgba(54, 162, 235, 0.6)",
+                    "rgba(255, 206, 86, 0.6)",
+                    "rgba(75, 192, 192, 0.6)",
+                    "rgba(153, 102, 255, 0.6)",
+                    "rgba(255, 159, 64, 0.6)",
+                    "rgba(199, 199, 199, 0.6)",
+                    "rgba(83, 102, 255, 0.6)",
+                    "rgba(255, 102, 255, 0.6)",
+                    "rgba(102, 255, 178, 0.6)",
+                    "rgba(255, 204, 102, 0.6)",
+                    "rgba(102, 153, 255, 0.6)",
+                    "rgba(255, 153, 153, 0.6)",
+                    "rgba(153, 255, 204, 0.6)",
+                    "rgba(204, 153, 255, 0.6)",
+                    "rgba(255, 102, 102, 0.6)",
+                    "rgba(102, 255, 102, 0.6)"
+                ],
+                borderColor: "#fff",
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: "bottom",
+                }
+            }
+        }
+    });
+</script>
+
+
 {% endblock %}

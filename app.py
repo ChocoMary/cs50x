@@ -127,7 +127,7 @@ def index():
 
     # Goal Percentage
     for goal in goals:
-        if goal["target"] > 0:
+        if goal["saved"] > 0:
             goal["percentage"] = (goal["saved"] / goal["target"]) * 100
 
         else:
@@ -377,7 +377,7 @@ def saving():
             "INSERT INTO saving_deposits (user_id, goal_id, amount) VALUES (?, ?, ?)", session["user_id"], goal_id, amount
         )
 
-        flash("Deposit added successfully!")
+        flash("Saving added successfully!")
         return redirect("/saving")
 
     else:

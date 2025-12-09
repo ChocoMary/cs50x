@@ -1,0 +1,25 @@
+.card-pastel-blue {
+    background-color: #e7f1ff;
+}
+
+.card-pastel-green {
+    background-color: #e9ffe7;
+}
+
+.card-pastel-red {
+    background-color: #ffe7e7;
+}
+
+.card-pastel-yellow {
+    background-color: #fff8d9;
+}
+
+#expensePieChart {
+    max-width: 250px;
+    max-height: 250px;
+    margin: 0 auto;
+}
+
+body {
+    padding-top: 60px;
+}
