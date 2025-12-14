@@ -187,7 +187,7 @@ def register():
             # creating balance for new user
             user_id = db.execute(
                 "SELECT id FROM users WHERE username = ?", username
-            )
+            )[0]["id"]
             db.execute("INSERT INTO balances (user_id, balance) VALUES (?, 0)", user_id)
             return redirect("/login")
         except ValueError:
@@ -361,6 +361,13 @@ def saving():
 
         if amount > current_balance:
             return apology("Not enough balance for saving.")
+        
+        # Check the saving amount
+        already_saved = db.execute("SELECT saved FROM saving_goals WHERE id = ?", goal_id)[0]["saved"]
+        target = db.execute("SELECT target FROM saving_goals WHERE id = ?", goal_id)[0]["target"]
+        if target < (already_saved + amount):
+            return apology("You're saving more than target amount.")
+
         
         # Update balance
         db.execute(
